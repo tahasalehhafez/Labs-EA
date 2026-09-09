@@ -1,0 +1,43 @@
+' Everything after a single quote is a comment. PlantUML ignores it.
+' A diagram always starts with @startuml and a name.
+@startuml context
+
+
+' Load the C4 shapes for a Level 1 context diagram.
+' The angle brackets mean "take it from the library already inside PlantUML".
+' So this works with no internet connection.
+!include <C4/C4_Context>
+
+' Give the picture a title that a manager can read.
+title Northline Shop - System Context (C4 Level 1)
+
+' Put a small legend at the bottom explaining the colours.
+LAYOUT_WITH_LEGEND()
+
+' A Person is a human being who uses the system.
+' The three parts are: short id, name on the box, description under the name.
+Person(shopper, "Shopper", "Buys home products on the Northline website")
+Person(warehouse_staff, "Warehouse Staff", "Picks and packs the orders in Riyadh")
+
+
+' A System is a thing we own and can change.
+System(northline_core, "NorthlineCore", "The 2011 system. Does catalog, cart, checkout, stock and shipping, all in one program.")
+
+
+' A System_Ext is a system somebody else owns. We cannot change it.
+System_Ext(payment_gateway, "Payment Gateway", "Takes the card payment and confirms it")
+System_Ext(shipping_partner, "Shipping Partner", "Delivers the box to the shopper's address")
+System_Ext(erp, "Finance ERP", "The accounting system used by the finance department")
+
+
+' Rel means relationship. It draws an arrow from the first id to the second id.
+' The text is what the arrow does, written from the caller's point of view.
+Rel(shopper, northline_core, "Browses products, adds to cart, pays")
+Rel(warehouse_staff, northline_core, "Reads the pick list, marks items as packed")
+Rel(northline_core, payment_gateway, "Asks to charge the card", "HTTPS")
+Rel(northline_core, shipping_partner, "Sends the delivery request", "HTTPS")
+Rel(northline_core, erp, "Sends the daily sales file", "SFTP, nightly")
+
+
+' Every diagram must be closed with @enduml.
+@enduml
