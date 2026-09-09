@@ -1,52 +1,53 @@
-# A hash sign starts a comment. The computer ignores these lines.
 # This file lists every container that makes up our system.
-
-# Everything below "services" is one running piece of software.
 services:
 
-  # Our own Catalog service.
+  # Our own Catalog service. Unchanged from before.
   catalog:
-    # Build an image from the Dockerfile in this folder, instead of downloading one.
     build: ./services/catalog
-    # Give the running container a fixed, readable name.
     container_name: northline-catalog
-    # Connect port 8080 on your laptop to port 8080 inside the container.
-    # The left number is your laptop. The right number is inside the box.
     ports:
       - "8080:8080"
-    # Values handed to the program when it starts.
     environment:
-      # Which port the program should listen on.
       PORT: "8080"
-    # If the container stops because of a crash, start it again.
     restart: unless-stopped
 
-  # The event log. It speaks the Kafka protocol but is one small container.
+  # The event log. Unchanged from before.
   redpanda:
-    # The official Redpanda image.
     image: docker.redpanda.com/redpandadata/redpanda:latest
-    # A readable name for the running container.
     container_name: northline-redpanda
-    # The exact start-up options. Each line is one option.
     command:
-      # Start the broker.
       - redpanda
       - start
-      # Use one CPU core. Enough for a laptop.
       - --smp=1
-      # Tell Redpanda it is sharing the machine, so it does not grab everything.
       - --overprovisioned
-      # This is the only broker, so its id is zero.
       - --node-id=0
-      # Skip the production readiness checks. This is a laptop, not a data centre.
       - --check=false
-      # Listen on two doors: one for other containers, one for your laptop.
       - --kafka-addr=INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092
-      # Tell clients which address to come back to for each door.
-      # Other containers use the name "redpanda". Your laptop uses "localhost".
       - --advertise-kafka-addr=INTERNAL://redpanda:29092,EXTERNAL://localhost:9092
-    # Open the external door to your laptop.
     ports:
       - "9092:9092"
-    # Restart it if it crashes.
     restart: unless-stopped
+
+  # NEW: the warehouse. It listens all day, so it starts with everything else.
+  warehouse:
+    build: ./services/warehouse
+    container_name: northline-warehouse
+    environment:
+      # Tell it where the event log is, using the service name on the private network.
+      KAFKA_BROKER: "redpanda:29092"
+    # Do not start this until redpanda has been created.
+    depends_on:
+      - redpanda
+    restart: unless-stopped
+
+  # NEW: the checkout publisher. It runs once, prints, and stops.
+  checkout:
+    build: ./services/checkout
+    environment:
+      KAFKA_BROKER: "redpanda:29092"
+    depends_on:
+      - redpanda
+    # A profile means "do not start this with everything else".
+    # We will start it by hand, only when we want to send events.
+    profiles:
+      - manual
