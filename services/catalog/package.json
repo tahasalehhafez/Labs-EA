@@ -1,13 +1,14 @@
 {
-    "name": "northline-catalog",
-    "version": "1.0.0",
-    "private": true,
-    "description": "Catalog service. Owns the product data.",
-    "main": "server.js",
-    "scripts": {
-      "start": "node server.js"
-    },
-    "dependencies": {
-      "express": "4.19.2"
-    }
+  "name": "northline-catalog",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Catalog service. Owns the product data. Sessions in Redis.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "4.19.2",
+    "redis": "4.7.0"
   }
+}
