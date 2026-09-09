@@ -1,17 +1,33 @@
 # This file lists every container that makes up our system.
 services:
 
-  # Our own Catalog service. Unchanged from before.
+  # The Catalog service. It can now be run as several copies.
   catalog:
     build: ./services/catalog
-    container_name: northline-catalog
+    # NOTE: container_name has been removed on purpose.
+    # A fixed name can only belong to one container, so it blocks copies.
+    # A range of ports. Copy one gets 8080, copy two gets 8081, copy three 8082.
     ports:
-      - "8080:8080"
+      - "8080-8082:8080"
     environment:
       PORT: "8080"
+      # Start in the wrong mode on purpose, so we can see the problem.
+      SESSION_STORE: "memory"
+      # Where Redis is, ready for when we switch over.
+      REDIS_URL: "redis://redis:6379"
+    depends_on:
+      - redis
     restart: unless-stopped
 
-  # The event log. Unchanged from before.
+  # NEW: Redis. A small, very fast shared store for session data.
+  redis:
+    image: redis:7-alpine
+    container_name: northline-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # The event log. Unchanged.
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:latest
     container_name: northline-redpanda
@@ -28,26 +44,22 @@ services:
       - "9092:9092"
     restart: unless-stopped
 
-  # NEW: the warehouse. It listens all day, so it starts with everything else.
+  # The warehouse listener. Unchanged.
   warehouse:
     build: ./services/warehouse
     container_name: northline-warehouse
     environment:
-      # Tell it where the event log is, using the service name on the private network.
       KAFKA_BROKER: "redpanda:29092"
-    # Do not start this until redpanda has been created.
     depends_on:
       - redpanda
     restart: unless-stopped
 
-  # NEW: the checkout publisher. It runs once, prints, and stops.
+  # The checkout publisher. Unchanged. Started by hand only.
   checkout:
     build: ./services/checkout
     environment:
       KAFKA_BROKER: "redpanda:29092"
     depends_on:
       - redpanda
-    # A profile means "do not start this with everything else".
-    # We will start it by hand, only when we want to send events.
     profiles:
       - manual
