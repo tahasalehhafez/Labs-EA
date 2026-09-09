@@ -1,0 +1,13 @@
+{
+    "name": "northline-checkout",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Checkout service. Publishes PaymentCaptured events.",
+    "main": "publisher.js",
+    "scripts": {
+      "start": "node publisher.js"
+    },
+    "dependencies": {
+      "kafkajs": "2.2.4"
+    }
+  }
