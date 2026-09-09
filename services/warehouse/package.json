@@ -1,0 +1,13 @@
+{
+    "name": "northline-warehouse",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Warehouse service. Reduces stock when payment is captured.",
+    "main": "consumer.js",
+    "scripts": {
+      "start": "node consumer.js"
+    },
+    "dependencies": {
+      "kafkajs": "2.2.4"
+    }
+  }
