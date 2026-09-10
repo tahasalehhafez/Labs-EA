@@ -12,7 +12,7 @@ services:
     environment:
       PORT: "8080"
       # Start in the wrong mode on purpose, so we can see the problem.
-      SESSION_STORE: "memory"
+      SESSION_STORE: "redis"
       # Where Redis is, ready for when we switch over.
       REDIS_URL: "redis://redis:6379"
     depends_on:
@@ -63,3 +63,28 @@ services:
       - redpanda
     profiles:
       - manual
+
+
+  # The gateway. It is the only door the shopper knocks on.
+  gateway:
+    # The official small nginx image. We add no code, only configuration.
+    image: nginx:alpine
+    container_name: northline-gateway
+    # Your laptop port 8000 connects to port 80 inside the container.
+    ports:
+      - "8000:80"
+    # Show our config file to nginx. ro means read-only, so nginx cannot change it.
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - catalog
+      - legacy
+    restart: unless-stopped
+
+  # The stand-in for the old 2011 system.
+  legacy:
+    image: nginx:alpine
+    container_name: northline-legacy
+    volumes:
+      - ./gateway/legacy.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped

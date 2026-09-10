@@ -33,3 +33,12 @@ Decision — what we chose, in one sentence, in the present tense.
 Consequences — what gets better, and what gets worse. Both. Always both.
 Status — Proposed, Accepted, or Superseded (meaning a later ADR replaced it).
 
+
+
+docker compose up -d --scale catalog=3
+
+docker compose ps
+
+docker compose exec gateway nginx -t
+
+docker compose exec gateway nginx -s reload
